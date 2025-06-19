@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Signup</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #6a11cb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            background-color: #4b0082;
+        }
+        .toggle-link {
+            margin-top: 15px;
+            display: block;
+            color: #6a11cb;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .toggle-link:hover {
+            text-decoration: underline;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="login-box">
+            <h2>Login</h2>
+            <input type="email" placeholder="Email" id="login-email">
+            <input type="password" placeholder="Password" id="login-password">
+            <button class="btn" onclick="login()">Login</button>
+            <a class="toggle-link" onclick="toggleForm()">Don't have an account? Sign up</a>
+        </div>
+        
+        <div id="signup-box" class="hidden">
+            <h2>Sign Up</h2>
+            <input type="text" placeholder="Full Name" id="signup-fullname">
+            <input type="email" placeholder="Email" id="signup-email">
+            <input type="password" placeholder="Password" id="signup-password">
+            <input type="password" placeholder="Confirm Password" id="signup-confirm-password">
+            <button class="btn" onclick="signup()">Sign Up</button>
+            <a class="toggle-link" onclick="toggleForm()">Already have an account? Login</a>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase configuration
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3uYZXGdTrbKnWGvazZVDqA0hXNyFlUug",
+            authDomain: "attendifier-aissmscoe.firebaseapp.com",
+            projectId: "attendifier-aissmscoe",
+            storageBucket: "attendifier-aissmscoe.appspot.com",
+            messagingSenderId: "130729074371",
+            appId: "1:130729074371:web:2754fe6ff431bbe7278c76",
+            measurementId: "G-8P9R3PH1B3"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        function toggleForm() {
+            document.getElementById("login-box").classList.toggle("hidden");
+            document.getElementById("signup-box").classList.toggle("hidden");
+        }
+
+        window.login = function () {
+            let email = document.getElementById("login-email").value;
+            let password = document.getElementById("login-password").value;
+
+            if (email === "" || password === "") {
+                alert("Please enter email and password.");
+                return;
+            }
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    alert("Login Successful!");
+                    window.location.href = "dashboard.html";  // Redirect to dashboard
+                })
+                .catch(error => alert(error.message));
+        };
+
+        window.signup = function () {
+            let fullname = document.getElementById("signup-fullname").value;
+            let email = document.getElementById("signup-email").value;
+            let password = document.getElementById("signup-password").value;
+            let confirmPassword = document.getElementById("signup-confirm-password").value;
+
+            if (fullname === "" || email === "" || password === "" || confirmPassword === "") {
+                alert("Please fill in all fields.");
+                return;
+            }
+            if (password !== confirmPassword) {
+                alert("Passwords do not match.");
+                return;
+            }
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then(async (userCredential) => {
+                    // Save user data to Firestore
+                    await setDoc(doc(db, "users", userCredential.user.uid), {
+                        fullname: fullname,
+                        email: email
+                    });
+                    alert("Signup successful! Redirecting to login page.");
+                    toggleForm();
+                })
+                .catch(error => alert(error.message));
+        };
+    </script>
+</body>
+</html>
